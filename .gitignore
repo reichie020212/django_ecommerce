@@ -241,6 +241,9 @@ Thumbs.db
 
 # ── Infra secrets ─────────────────────────────────────────────
 infra/secrets/
+infra/cloudflared/config.yml
+infra/launchd/com.lumengoods.*.plist
+!infra/launchd/com.lumengoods.*.plist.example
 *.pem
 *.key
 *.crt

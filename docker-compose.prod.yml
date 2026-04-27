@@ -6,6 +6,8 @@
 #   - web runs `pnpm start` against a built bundle (not `pnpm dev`)
 #   - no host-mount source bind (image is the source-of-truth)
 #   - ports closed; only Caddy listens on 80/443
+#   - cloudflared service available behind the `tunnel` profile so the
+#     Mac mini publishes a public hostname without opening router ports
 # ============================================================
 services:
   api:
@@ -25,3 +27,14 @@ services:
     volumes:
       - lumen_node_modules:/app/node_modules
     ports: !reset []
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    depends_on:
+      - caddy
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./infra/cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+      - ./infra/secrets/cloudflared.json:/etc/cloudflared/credentials.json:ro
