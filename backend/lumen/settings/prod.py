@@ -1,5 +1,6 @@
 """Production settings — strict cookie flags, HSTS, no debug."""
-from .base import *  # noqa: F401,F403
+
+from .base import *  # noqa: F403
 
 DEBUG = False
 
