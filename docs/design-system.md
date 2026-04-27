@@ -57,16 +57,41 @@ These are not aspirational — they're observable in `prototype/styles.css` and 
 
 | Component | Source | Status |
 |---|---|---|
-| `Topbar` | `prototype/topbar.jsx` | pending |
-| `ProductCard` | `prototype/components.jsx` | pending |
-| `Hero` (Gallery) | `prototype/gallery.jsx` | pending |
-| `Filters` | `prototype/gallery.jsx` | pending |
-| `PDP gallery` | `prototype/pdp.jsx` | pending |
-| `CartDrawer` | `prototype/cart.jsx` | pending |
-| `Checkout` (multi-step) | `prototype/checkout.jsx` | pending |
-| `Footer` | `prototype/app.jsx` | pending |
+| `Topbar` | `prototype/topbar.jsx` | ✅ ported (search wired to URL) |
+| `Icon` registry | `prototype/icons.jsx` | ✅ ported (24 icons) |
+| `Placeholder` | `prototype/components.jsx` | ✅ ported |
+| `Stars` | `prototype/components.jsx` | ✅ ported |
+| `ProductCard` | `prototype/components.jsx` | ✅ ported (quick-add is a no-op until task #9) |
+| `Hero` (Gallery) | `prototype/gallery.jsx` | ✅ ported |
+| `Filters` | `prototype/gallery.jsx` | ✅ ported (URL-state) |
+| `GalleryToolbar` | `prototype/gallery.jsx` | ✅ ported |
+| `Footer` | `prototype/app.jsx` | ✅ ported |
+| `PDP gallery` | `prototype/pdp.jsx` | pending (task #8) |
+| `CartDrawer` | `prototype/cart.jsx` | pending (task #9) |
+| `Checkout` (multi-step) | `prototype/checkout.jsx` | pending (task #10) |
 
 Update this table as components land.
+
+## Stylesheet split
+
+The prototype's monolithic `prototype/styles.css` (1309 lines) is carved into two files in `frontend/styles/`:
+
+- `tokens.css` — the `:root` token block + body/scrollbar resets (lines 1–74 of the prototype). **Ported verbatim.**
+- `components.css` — every component selector below (`.topbar`, `.card`, `.gallery`, `.checkout`, etc.). **Ported verbatim.**
+
+Both are imported from `app/globals.css`. Tailwind's `base` preflight is intentionally omitted — it would undo the prototype's heading / paragraph defaults the design depends on. `components` and `utilities` directives stay so we can drop in ad-hoc helpers.
+
+## Fonts
+
+Loaded via `next/font/google` in `app/layout.tsx`:
+
+- **Inter** — weights 400, 500, 600, 700
+- **Instrument Serif** — weight 400, normal + italic
+- **JetBrains Mono** — weights 400, 500
+
+next/font fetches the woff2 files at build time and serves them from our own origin at runtime. CSS variables `--font-sans`, `--font-serif`, `--font-mono` are set on `<html>` via the font's `variable` option, overriding the fallback stack defined in `tokens.css`.
+
+If we ever go fully air-gapped on the Mac mini, switch to `next/font/local` with the woff2 files dropped in `public/fonts/`.
 
 ## Extending
 

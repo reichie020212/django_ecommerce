@@ -223,6 +223,9 @@ node_modules/
 out/
 .pnpm-store/
 *.tsbuildinfo
+# next/font writes a header into next-env.d.ts on every dev boot — gitignore
+# rather than fight the regeneration.
+frontend/next-env.d.ts
 next-env.d.ts.bak
 
 # ── Build artifacts / collected statics ───────────────────────
