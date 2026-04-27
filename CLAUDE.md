@@ -126,11 +126,11 @@ docker compose exec web pnpm test:e2e     # playwright
 docker compose exec api ruff check . --fix && docker compose exec api ruff format .
 docker compose exec web pnpm lint --fix && docker compose exec web pnpm format
 
-# Reset DB to a clean seeded state
+# Reset DB to a clean seeded state (refuses unless DJANGO_DEBUG=1)
 ./infra/scripts/seed.sh
 ```
 
-After writing code, **run the linter+formatter before committing**. Pre-commit hooks enforce this; don't bypass them.
+After writing code, **run the linter+formatter before committing**. Pre-commit hooks (`.pre-commit-config.yaml` — ruff + prettier + standard hygiene) enforce this; don't bypass them. Install once with `brew install pre-commit && pre-commit install`.
 
 ---
 
@@ -141,7 +141,7 @@ The prototype is the spec. Pixel fidelity is a non-negotiable.
 - All design tokens (colors, radii, spacing, type ramp, shadows, easings) live in `prototype/styles.css` and **must be ported verbatim** to `frontend/styles/tokens.css`. Don't paraphrase, round, or "interpret."
 - New components must first be reviewed against the prototype's visual language. If the prototype already has a similar component, port it rather than invent. If it doesn't, propose it before building (see §11).
 - Animations and easings must match the prototype: card hover (0.6s `cubic-bezier(0.2, 0.8, 0.2, 1)`), drawer slide (0.4s same curve), fly-to-cart dot (0.85s `cubic-bezier(0.5, 0, 0.4, 1)`), cart bump bounce, etc. These are in `prototype/styles.css`.
-- Fonts are **self-hosted** at build time. Don't pin Google Fonts CDN in production HTML — bundle Inter, Instrument Serif, and JetBrains Mono via `next/font/local`.
+- Fonts are **self-hosted from our own origin at runtime**. Inter, Instrument Serif, and JetBrains Mono are loaded via `next/font/google` in `app/layout.tsx` — Next.js fetches the woff2s once at build time and bundles them into `_next/static`, so the browser never hits Google Fonts. If a future Mac mini deployment goes fully air-gapped, swap to `next/font/local` with the woff2s checked into `frontend/public/fonts/`. Never use a runtime `<link href="fonts.googleapis.com">`.
 - The placeholder striped imagery (`prototype/components.jsx:Placeholder`) is for the prototype only — replace with real product imagery served from local storage / S3.
 
 `docs/design-system.md` is the canonical writeup of which tokens and components have been ported and how to extend them.
@@ -201,15 +201,15 @@ This stack runs on a single **Mac mini M4 Pro** (Apple Silicon, arm64, macOS, he
 - **Reverse proxy + TLS**: Caddy (preferred, automatic Let's Encrypt) in front of the stack. `Caddyfile` covers both `lumen.local` (LAN) and a public domain.
 - **Public exposure**: Cloudflare Tunnel — never open router ports. Config in `infra/cloudflared/`.
 - **Resource budget**: Postgres `shared_buffers` constrained, **2** Celery workers, **1** Next.js Node process. Document assumed limits in `infra/README.md`.
-- **Backups**: nightly `pg_dump` + `restic` snapshot of the media directory to an external volume. Cron entry shipped in `infra/launchd/`.
-- **Headless workflow**: every common op (deploy, migrate, restore, rotate logs) has a CLI script in `infra/scripts/`. No GUI assumptions.
+- **Backups**: nightly `pg_dump` (03:15) + `restic` snapshot of the media volume (03:35) to an external volume. launchd plist templates ship in `infra/launchd/com.lumengoods.{pg,media}-backup.plist.example`.
+- **Headless workflow**: every common op (deploy, seed, restore) has a CLI script in `infra/scripts/`. No GUI assumptions.
 
 ---
 
 ## 10. Do-not list
 
 - **Don't phone home.** No analytics, telemetry, error reporters, or feature flags that beacon to a third party. If observability is needed, it's self-hosted.
-- **Don't pin CDN fonts at build time.** Self-host Inter, Instrument Serif, JetBrains Mono via `next/font/local`.
+- **Don't load fonts from a CDN at runtime.** `next/font/google` is fine — it bundles the woff2s into our origin at build time. A `<link href="fonts.googleapis.com">` in HTML is not.
 - **Don't recreate real brand UI patterns.** Inspiration from Apple / Stripe / Shopify is fine; replication of their actual chrome is not.
 - **Don't pad with filler.** No fake stats, fake badges, fake reviews beyond what the prototype defines. The prototype is the maximum data density.
 - **Don't introduce SaaS dependencies.** Stripe is the one exception. Anything else (auth, search, queues, mail, monitoring) ships self-hosted; if a SaaS option is added, it must be flagged and offered alongside the self-hosted alternative.
@@ -232,11 +232,12 @@ This project follows the global Division of Labor: **Gemini is the architect, Cl
 ## 12. Where to find things
 
 - **Spec / brief**: `CLAUDE_CODE_HANDOFF.md`
-- **Design source-of-truth**: `prototype/` (do not edit; it's frozen)
-- **Ported tokens**: `frontend/styles/tokens.css`
+- **Local-dev quickstart**: `README.md`
 - **Mac mini deploy runbook**: `infra/README.md`
+- **Design source-of-truth**: `prototype/` (do not edit; it's frozen)
+- **Ported tokens**: `frontend/styles/tokens.css` + `frontend/styles/components.css`
+- **Architecture**: `docs/architecture.md` (system diagram + full API surface + data flows)
+- **Design-system writeup**: `docs/design-system.md` (token catalog + component port table + stylesheet split)
 - **Stripe integration notes**: `docs/stripe.md`
-- **Architecture**: `docs/architecture.md`
-- **Design-system writeup**: `docs/design-system.md`
 
 `GEMINI.md` is generated from this file via `scripts/sync-agent-docs.sh`. Edit `CLAUDE.md` and run the script — never edit `GEMINI.md` by hand.

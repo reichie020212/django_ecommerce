@@ -2,9 +2,9 @@
 
 > The prototype at `prototype/styles.css` is the source of truth. This document is the human-readable companion that catalogs which tokens have been ported and how to extend the system.
 
-## Tokens (ported in task #6)
+## Tokens
 
-The full token set lives in `frontend/styles/tokens.css`. The Tailwind config (`frontend/tailwind.config.ts`) exposes those CSS variables as Tailwind utilities — never hard-code hex values in components.
+The full token set lives in `frontend/styles/tokens.css` (ported verbatim from the prototype's `:root` block). The Tailwind config (`frontend/tailwind.config.ts`) exposes those CSS variables as Tailwind utilities — never hard-code hex values in components.
 
 ### Color
 
@@ -28,7 +28,7 @@ The full token set lives in `frontend/styles/tokens.css`. The Tailwind config (`
 - `--font-serif`: Instrument Serif
 - `--font-mono`: JetBrains Mono
 
-Self-hosted via `next/font/local`. Do not load from Google Fonts CDN at runtime.
+Loaded via `next/font/google` in `app/layout.tsx` (see [Fonts](#fonts) below). Bundled into our own origin at build time — the browser never hits Google Fonts at runtime.
 
 ### Radius
 
@@ -55,31 +55,34 @@ These are not aspirational — they're observable in `prototype/styles.css` and 
 
 ## Components ported
 
-| Component | Source | Status |
-|---|---|---|
-| `Topbar` | `prototype/topbar.jsx` | ✅ ported (search wired to URL) |
-| `Icon` registry | `prototype/icons.jsx` | ✅ ported (24 icons) |
-| `Placeholder` | `prototype/components.jsx` | ✅ ported |
-| `Stars` | `prototype/components.jsx` | ✅ ported |
-| `ProductCard` | `prototype/components.jsx` | ✅ ported (quick-add is a no-op until task #9) |
-| `Hero` (Gallery) | `prototype/gallery.jsx` | ✅ ported |
-| `Filters` | `prototype/gallery.jsx` | ✅ ported (URL-state) |
-| `GalleryToolbar` | `prototype/gallery.jsx` | ✅ ported |
-| `Footer` | `prototype/app.jsx` | ✅ ported |
-| `PDP gallery` | `prototype/pdp.jsx` | pending (task #8) |
-| `CartDrawer` | `prototype/cart.jsx` | pending (task #9) |
-| `Checkout` (multi-step) | `prototype/checkout.jsx` | pending (task #10) |
+All four screens from the prototype are live; this table lists the React components and the prototype source they're ported from. Update it whenever a new component lands.
 
-Update this table as components land.
+| Component | Prototype source | Notes |
+|---|---|---|
+| `Topbar` | `prototype/topbar.jsx` | search debounced into `?search=`; cart icon shows live count, opens drawer |
+| `Icon` registry | `prototype/icons.jsx` | 24-icon stroke set, `currentColor` |
+| `Placeholder` | `prototype/components.jsx` | striped tone-tinted div |
+| `Stars` | `prototype/components.jsx` | 5-star row |
+| `ProductCard` | `prototype/components.jsx` | quick-add picks first color + first non-sold-out size |
+| `Hero` | `prototype/gallery.jsx` | `/shop` editorial header + meta strip |
+| `Filters` | `prototype/gallery.jsx` | category / price slider / color swatches / availability — every change round-trips through the URL |
+| `GalleryToolbar` | `prototype/gallery.jsx` | sort dropdown + grid/rows toggle |
+| `Footer` | `prototype/app.jsx` | site footer with brand block + columns |
+| `PDP` | `prototype/pdp.jsx` | image gallery, color/size pickers, qty stepper, cross-fade `Add to bag`, accordion, related rail, JSON-LD `Product` |
+| `CartDrawer` | `prototype/cart.jsx` | slide-out with scrim, qty-mini steppers, free-shipping progress, totals, Stripe-secured checkout link |
+| `FlyDot` | `prototype/app.jsx` | dot animation from source button → cart icon, with `.cart-bump` |
+| `Checkout` | `prototype/checkout.jsx` | Shipping → Payment (`<PaymentElement />`) → Review → Confirmation; coupon Apply with green discount line |
+| `SignInForm`, `RegisterForm`, `Account` | new (no prototype) | additive auth/account screens; styled via `styles/auth.css` to match the rest of the design |
 
 ## Stylesheet split
 
-The prototype's monolithic `prototype/styles.css` (1309 lines) is carved into two files in `frontend/styles/`:
+The prototype's monolithic `prototype/styles.css` (1309 lines) is carved into three files in `frontend/styles/`, all imported from `app/globals.css`:
 
 - `tokens.css` — the `:root` token block + body/scrollbar resets (lines 1–74 of the prototype). **Ported verbatim.**
-- `components.css` — every component selector below (`.topbar`, `.card`, `.gallery`, `.checkout`, etc.). **Ported verbatim.**
+- `components.css` — every component selector below (`.topbar`, `.card`, `.gallery`, `.pdp`, `.drawer`, `.checkout`, footer, animations). **Ported verbatim.**
+- `auth.css` — additive layer for the auth/account screens that aren't in the prototype (`auth-shell`, `auth-card`, `account-shell`, `order-list`). Uses only existing tokens — no new hex values.
 
-Both are imported from `app/globals.css`. Tailwind's `base` preflight is intentionally omitted — it would undo the prototype's heading / paragraph defaults the design depends on. `components` and `utilities` directives stay so we can drop in ad-hoc helpers.
+Tailwind's `base` preflight is intentionally omitted — it would undo the prototype's heading / paragraph defaults the design depends on. `components` and `utilities` directives stay so we can drop in ad-hoc helpers.
 
 ## Fonts
 
@@ -89,9 +92,9 @@ Loaded via `next/font/google` in `app/layout.tsx`:
 - **Instrument Serif** — weight 400, normal + italic
 - **JetBrains Mono** — weights 400, 500
 
-next/font fetches the woff2 files at build time and serves them from our own origin at runtime. CSS variables `--font-sans`, `--font-serif`, `--font-mono` are set on `<html>` via the font's `variable` option, overriding the fallback stack defined in `tokens.css`.
+next/font fetches the woff2 files **at build time** and serves them from our own origin (`/_next/static/...`) at runtime — the browser never hits Google Fonts. CSS variables `--font-sans`, `--font-serif`, `--font-mono` are set on `<html>` via the font's `variable` option, overriding the fallback stack defined in `tokens.css`.
 
-If we ever go fully air-gapped on the Mac mini, switch to `next/font/local` with the woff2 files dropped in `public/fonts/`.
+If we ever go fully air-gapped on the Mac mini, switch to `next/font/local` with the woff2 files dropped in `frontend/public/fonts/`. The CSS-variable contract stays the same; nothing else has to change.
 
 ## Extending
 
