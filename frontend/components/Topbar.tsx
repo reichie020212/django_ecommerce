@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import { useAuth } from './AuthProvider';
 import { useCart } from './CartProvider';
 import { Icon } from './Icon';
 
@@ -16,7 +17,9 @@ export function Topbar() {
   const params = useSearchParams();
   const [search, setSearch] = useState(params.get('search') ?? '');
   const { cart, openDrawer } = useCart();
+  const { user } = useAuth();
   const cartCount = cart?.item_count ?? 0;
+  const accountHref = user ? '/account' : '/auth/sign-in';
 
   // Debounce — 250ms after typing stops, push the URL.
   useEffect(() => {
@@ -61,9 +64,13 @@ export function Topbar() {
               aria-label="Search"
             />
           </div>
-          <button className="icon-btn" aria-label="Account" type="button">
+          <Link
+            href={accountHref}
+            className="icon-btn"
+            aria-label={user ? `Account · ${user.email}` : 'Sign in'}
+          >
             <Icon name="user" size={18} />
-          </button>
+          </Link>
           <button className="icon-btn" aria-label="Saved" type="button">
             <Icon name="heart" size={18} />
           </button>

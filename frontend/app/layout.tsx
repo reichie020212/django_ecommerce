@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Instrument_Serif, JetBrains_Mono } from 'next/font/google';
 
+import { AuthProvider } from '@/components/AuthProvider';
 import { CartDrawer } from '@/components/CartDrawer';
 import { CartProvider } from '@/components/CartProvider';
 import { FlyDot } from '@/components/FlyDot';
@@ -44,11 +45,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${serif.variable} ${mono.variable}`}>
       <body>
-        <CartProvider>
-          {children}
-          <CartDrawer />
-          <FlyDot />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            {children}
+            <CartDrawer />
+            <FlyDot />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

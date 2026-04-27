@@ -1,0 +1,134 @@
+/* ============================================================
+   Auth + account screens — additive on top of components.css.
+   ============================================================ */
+.auth-shell {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 64px 24px 96px;
+  display: flex;
+  justify-content: center;
+}
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 40px 36px;
+  box-shadow: var(--shadow-sm);
+}
+.auth-title {
+  font-family: var(--font-serif);
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  margin: 0 0 6px;
+  color: var(--slate-900);
+}
+.auth-sub {
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin: 0 0 28px;
+}
+.auth-error {
+  background: #fdecec;
+  color: var(--danger);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  white-space: pre-wrap;
+}
+.auth-foot {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.auth-foot a {
+  color: var(--indigo-600);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.account-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 56px 24px 96px;
+}
+.account-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 32px;
+}
+.account-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.account-title {
+  font-family: var(--font-serif);
+  font-size: 44px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  margin: 0 0 6px;
+  color: var(--slate-900);
+}
+.account-section h2 {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin: 0 0 18px;
+  color: var(--slate-900);
+}
+
+.empty-state {
+  background: var(--paper-2);
+  border-radius: var(--r-lg);
+  padding: 48px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--ink-soft);
+}
+
+.order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.order-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.order-num {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--slate-900);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.order-total {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--slate-900);
+  font-feature-settings: 'tnum';
+}
