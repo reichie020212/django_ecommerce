@@ -1,5 +1,10 @@
+/* tokens.css imports the design tokens + the prototype's body/scrollbar resets.
+   components.css imports the rest of the prototype stylesheet verbatim.
+   Tailwind's `base` preflight is intentionally omitted: it would undo the
+   prototype's heading / paragraph defaults that the design relies on.
+   `components` + `utilities` stay so we can drop in ad-hoc helpers. */
 @import '../styles/tokens.css';
+@import '../styles/components.css';
 
-@tailwind base;
 @tailwind components;
 @tailwind utilities;
