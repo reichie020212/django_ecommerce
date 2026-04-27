@@ -1,16 +1,41 @@
 // Product card — port of prototype/components.jsx:ProductCard.
-// Quick-add wiring lands with the cart in task #9; for v1 the button
-// is rendered for hover-fidelity but is a no-op.
+// Quick-add picks the first color and the first non-sold-out size, mirroring
+// prototype/app.jsx's quick-add path.
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 
 import type { Product } from '@/lib/types';
 import { fmt } from '@/lib/format';
+
+import { useCart } from './CartProvider';
 import { Icon } from './Icon';
 import { Placeholder } from './Placeholder';
 
 export function ProductCard({ product }: { product: Product }) {
+  const { addLine } = useCart();
+  const [adding, setAdding] = useState(false);
+
+  const firstColor = product.colors[0];
+  const firstAvailableSize =
+    product.sizes.find((s) => !product.sold_out.includes(s)) ?? product.sizes[0];
+
+  const handleQuickAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (adding || !firstColor || !firstAvailableSize) return;
+    setAdding(true);
+    void addLine({
+      productSlug: product.slug,
+      color: firstColor.name,
+      size: firstAvailableSize,
+      qty: 1,
+      sourceEl: e.currentTarget,
+    });
+    window.setTimeout(() => setAdding(false), 1100);
+  };
+
   return (
     <Link href={`/p/${product.slug}`} className="card">
       <div className="card-image-wrap">
@@ -25,9 +50,9 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="card-quick">
           <button
             type="button"
-            className="btn add-btn"
-            onClick={(e) => e.preventDefault()}
-            aria-disabled
+            className={'btn add-btn' + (adding ? ' is-adding' : '')}
+            onClick={handleQuickAdd}
+            disabled={!firstColor || !firstAvailableSize}
           >
             <span className="btn-text">
               <Icon name="bag" size={14} /> Quick add
