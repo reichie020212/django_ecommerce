@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
 import { Inter, Instrument_Serif, JetBrains_Mono } from 'next/font/google';
+
+import { CartDrawer } from '@/components/CartDrawer';
+import { CartProvider } from '@/components/CartProvider';
+import { FlyDot } from '@/components/FlyDot';
+
 import './globals.css';
 
 // Self-hosted (build-time bundled) font assets via next/font.
@@ -38,7 +43,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${serif.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <CartProvider>
+          {children}
+          <CartDrawer />
+          <FlyDot />
+        </CartProvider>
+      </body>
     </html>
   );
 }

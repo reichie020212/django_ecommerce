@@ -1,19 +1,22 @@
 // Sticky topbar — port of prototype/topbar.jsx.
 // Search input updates the ?search= URL param so the server-rendered grid
-// re-fetches. Cart-icon click is a no-op until the cart drawer ships in
-// task #9.
+// re-fetches. Cart icon shows live item count from the cart context and
+// opens the drawer on click.
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import { useCart } from './CartProvider';
 import { Icon } from './Icon';
 
-export function Topbar({ cartCount = 0 }: { cartCount?: number }) {
+export function Topbar() {
   const router = useRouter();
   const params = useSearchParams();
   const [search, setSearch] = useState(params.get('search') ?? '');
+  const { cart, openDrawer } = useCart();
+  const cartCount = cart?.item_count ?? 0;
 
   // Debounce — 250ms after typing stops, push the URL.
   useEffect(() => {
@@ -64,7 +67,13 @@ export function Topbar({ cartCount = 0 }: { cartCount?: number }) {
           <button className="icon-btn" aria-label="Saved" type="button">
             <Icon name="heart" size={18} />
           </button>
-          <button id="cart-btn" className="icon-btn" aria-label="Cart" type="button">
+          <button
+            id="cart-btn"
+            className="icon-btn"
+            aria-label={`Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
+            type="button"
+            onClick={openDrawer}
+          >
             <Icon name="bag" size={18} />
             {cartCount > 0 && <span className="badge">{cartCount}</span>}
           </button>

@@ -1,7 +1,4 @@
 // Product detail page — port of prototype/pdp.jsx.
-// Cart wiring (the actual addToCart + fly-to-cart dot) lands in task #9;
-// for v1 the Add-to-bag button runs the in-place cross-fade animation
-// (.add-btn.is-adding) but is otherwise a no-op.
 'use client';
 
 import Link from 'next/link';
@@ -10,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Product, ProductDetail } from '@/lib/types';
 import { fmt } from '@/lib/format';
 
+import { useCart } from './CartProvider';
 import { Icon } from './Icon';
 import { Placeholder } from './Placeholder';
 import { ProductCard } from './ProductCard';
@@ -28,6 +26,7 @@ export function PDP({ product, related }: Props) {
   const [adding, setAdding] = useState(false);
   const [openAcc, setOpenAcc] = useState<AccordionId | null>('details');
   const addBtnRef = useRef<HTMLButtonElement>(null);
+  const { addLine } = useCart();
 
   // Reset state when navigating between products (Link click → same component).
   useEffect(() => {
@@ -44,12 +43,18 @@ export function PDP({ product, related }: Props) {
 
   const handleAdd = () => {
     if (adding) return;
-    if (!size) {
-      const first = product.sizes.find((s) => !product.sold_out.includes(s));
-      if (first) setSize(first);
-    }
+    const chosenSize =
+      size ?? product.sizes.find((s) => !product.sold_out.includes(s)) ?? product.sizes[0];
+    if (!chosenSize) return;
+    if (!size) setSize(chosenSize);
     setAdding(true);
-    // TODO(task #9): call useCart().addToCart({ ... }) and trigger fly-to-cart.
+    void addLine({
+      productSlug: product.slug,
+      color: color.name,
+      size: chosenSize,
+      qty,
+      sourceEl: addBtnRef.current,
+    });
     setTimeout(() => setAdding(false), 1400);
   };
 
