@@ -33,8 +33,8 @@ Until real keys are set, the Shipping form still renders, but `POST /api/checkou
 ## Webhook events handled
 
 - `payment_intent.succeeded` → mark order paid (idempotent), record `stripe_status = "succeeded"`, set `paid_at`.
-- `payment_intent.payment_failed` → record `stripe_status = "failed"`. The customer-facing UI shows the Stripe error message inline; webhook is the safety net.
-- `charge.refunded` → not handled in v1; refunds are issued from the Django admin and the webhook will be wired alongside accounts (task #11).
+- `payment_intent.payment_failed` → record `stripe_status = "failed"`. The customer-facing UI shows the Stripe error message inline; the webhook is the safety net.
+- `charge.refunded` → not handled in v1; refunds are issued from the Django admin and the webhook is a planned post-launch addition (it will mark the Order refunded and trigger a Celery email task).
 
 ## Test cards
 
@@ -53,6 +53,8 @@ stripe listen --forward-to http://localhost:8000/api/webhooks/stripe/
 
 `orders.stripe_helpers.construct_webhook_event` wraps `stripe.Webhook.construct_event(payload, sig, secret)`. Bad signatures → 400. Missing config → 503. No fallbacks; we never trust an unverified webhook.
 
-## Customer linkage (deferred)
+## Customer linkage
 
-A Stripe `Customer` is created on first authenticated checkout and stored on `accounts.User.stripe_customer_id` once accounts ship in task #11. Saved payment methods are referenced via `PaymentMethod` IDs, never stored locally as raw card data.
+`accounts.User` already has a `stripe_customer_id` field (indexed, blank by default). The Stripe `Customer` row is created lazily on the first authenticated checkout — when an authed user `POST`s to `/api/checkout/payment-intent/` and they don't yet have a customer ID, the helper in `orders/stripe_helpers.py` creates one and stores its `cus_…` on the user.
+
+Saved payment methods are then referenced via Stripe `PaymentMethod` IDs, never stored locally as raw card data. The list-cards UI on `/account` is a planned post-launch addition; the cleanest path is a link-out to the Stripe-hosted **Customer Portal** (`stripe.billing_portal.sessions.create`) so we don't reimplement the management UI ourselves.
