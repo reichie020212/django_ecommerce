@@ -1,0 +1,109 @@
+# ============================================================
+# Lumen Goods — dev stack
+# All images pinned to arm64-compatible tags (Apple Silicon target).
+# ============================================================
+name: lumen
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lumen}
+      POSTGRES_USER: ${POSTGRES_USER:-lumen}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lumen}
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - max_connections=100
+    volumes:
+      - lumen_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lumen} -d ${POSTGRES_DB:-lumen}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    volumes:
+      - lumen_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+      - lumen_media:/var/lumen/media
+      - lumen_static:/var/lumen/static
+    ports:
+      - "8000:8000"
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    command: celery -A lumen worker --loglevel=info --concurrency=2
+    volumes:
+      - ./backend:/app
+      - lumen_media:/var/lumen/media
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - api
+    command: pnpm dev
+    volumes:
+      - ./frontend:/app
+      - lumen_node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - api
+      - web
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - lumen_caddy_data:/data
+      - lumen_caddy_config:/config
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  lumen_db:
+  lumen_redis:
+  lumen_media:
+  lumen_static:
+  lumen_node_modules:
+  lumen_caddy_data:
+  lumen_caddy_config:

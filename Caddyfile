@@ -1,0 +1,40 @@
+# ============================================================
+# Lumen Goods — reverse proxy
+#
+# Two host blocks:
+#   lumen.local      — LAN (self-signed via Caddy's internal CA)
+#   lumen.example    — public (replace with real domain; Caddy auto-issues
+#                      a Let's Encrypt cert)
+#
+# Routing:
+#   /api/*    → api:8000  (Django)
+#   /admin/*  → api:8000  (Django admin)
+#   /static/* → api:8000
+#   /media/*  → api:8000
+#   *         → web:3000  (Next.js)
+# ============================================================
+
+{
+	# Set email for Let's Encrypt registration in production.
+	# email ops@lumen.example
+}
+
+(lumen_routes) {
+	encode zstd gzip
+
+	@api path /api/* /admin/* /static/* /media/*
+	reverse_proxy @api api:8000
+
+	reverse_proxy web:3000
+}
+
+# ── LAN ──────────────────────────────────────────────────────
+lumen.local {
+	tls internal
+	import lumen_routes
+}
+
+# ── Public (uncomment + replace domain when going live) ──────
+# lumen.example {
+# 	import lumen_routes
+# }
