@@ -1,4 +1,11 @@
-"""Catalog URL routes. Filled in alongside views in task #5."""
-from django.urls import URLPattern, URLResolver
+"""Catalog URL routes."""
 
-urlpatterns: list[URLPattern | URLResolver] = []
+from django.urls import path
+
+from .views import CategoryListView, ProductDetailView, ProductListView
+
+urlpatterns = [
+    path("products/", ProductListView.as_view(), name="product-list"),
+    path("products/<slug:slug>/", ProductDetailView.as_view(), name="product-detail"),
+    path("categories/", CategoryListView.as_view(), name="category-list"),
+]

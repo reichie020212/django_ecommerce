@@ -1,5 +1,6 @@
 """Development settings — debug on, console email, permissive CORS for the dev frontend."""
-from .base import *  # noqa: F401,F403
+
+from .base import *  # noqa: F403
 
 DEBUG = True
 ALLOWED_HOSTS = ["*"]

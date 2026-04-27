@@ -37,7 +37,12 @@ extend-exclude = ["migrations"]
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "B", "UP", "DJ", "S", "C4", "SIM", "RUF"]
 ignore = [
-    "S101",  # asserts allowed in tests
+    "S101",   # asserts allowed in tests
+    "RUF012", # Django Meta.ordering / list_display / TAG_CHOICES are intentionally class-level mutables
+    "RUF001", # ambiguous – / × characters appear in product copy on purpose
+    "RUF002",
+    "RUF003",
+    "DJ012",  # Django Style Guide method ordering — too noisy for limited value
 ]
 
 [tool.ruff.lint.per-file-ignores]
