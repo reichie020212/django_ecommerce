@@ -1,13 +1,23 @@
 # Cloudflare Tunnel — config.yml
-# Copy to config.yml and replace the tunnel UUID + hostname.
-# Run with: cloudflared tunnel --config infra/cloudflared/config.yml run
+# Copy to infra/cloudflared/config.yml (gitignored) and replace the
+# placeholders. The companion credentials JSON lives in
+# infra/secrets/cloudflared.json (also gitignored).
+#
+# When run via the docker-compose `tunnel` profile, this file is
+# mounted at /etc/cloudflared/config.yml inside the cloudflared
+# container, and credentials.json is mounted alongside it.
 
 tunnel: REPLACE-WITH-TUNNEL-UUID
-credentials-file: /Users/<you>/.cloudflared/REPLACE-WITH-TUNNEL-UUID.json
+credentials-file: /etc/cloudflared/credentials.json
 
+# Cloudflared dials Caddy by service name on the docker network.
+# Caddy serves the LAN host (lumen.local) with its internal CA;
+# Cloudflare re-wraps the response with a public Let's Encrypt cert
+# at the edge, so noTLSVerify just disables hostname mismatch.
 ingress:
   - hostname: lumen.example
-    service: https://lumen.local
+    service: https://caddy
     originRequest:
-      noTLSVerify: true   # Caddy serves the LAN cert; CF Tunnel re-wraps with public cert
+      noTLSVerify: true
+      originServerName: lumen.local
   - service: http_status:404

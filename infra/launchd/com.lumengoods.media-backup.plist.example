@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Nightly restic snapshot of the media volume. Runs daily at 03:35 local
+  time, 20 minutes after the Postgres dump so they don't fight for the
+  external disk.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.lumengoods.media-backup</string>
+  <key>WorkingDirectory</key><string>/Users/REPLACE-ME/lumen/goods</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>infra/backups/restic-snapshot.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>3</integer>
+    <key>Minute</key><integer>35</integer>
+  </dict>
+  <key>StandardOutPath</key><string>/tmp/lumengoods.media-backup.out</string>
+  <key>StandardErrorPath</key><string>/tmp/lumengoods.media-backup.err</string>
+</dict>
+</plist>

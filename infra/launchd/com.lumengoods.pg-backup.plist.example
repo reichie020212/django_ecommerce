@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Nightly Postgres backup. Edit WorkingDirectory and load via:
+    cp infra/launchd/com.lumengoods.pg-backup.plist.example \
+      ~/Library/LaunchAgents/com.lumengoods.pg-backup.plist
+    launchctl load ~/Library/LaunchAgents/com.lumengoods.pg-backup.plist
+  Runs daily at 03:15 local time.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.lumengoods.pg-backup</string>
+  <key>WorkingDirectory</key><string>/Users/REPLACE-ME/lumen/goods</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>infra/backups/pg_backup.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>3</integer>
+    <key>Minute</key><integer>15</integer>
+  </dict>
+  <key>StandardOutPath</key><string>/tmp/lumengoods.pg-backup.out</string>
+  <key>StandardErrorPath</key><string>/tmp/lumengoods.pg-backup.err</string>
+</dict>
+</plist>
