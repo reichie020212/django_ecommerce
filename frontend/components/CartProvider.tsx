@@ -48,6 +48,7 @@ type CartContextValue = {
   }) => Promise<void>;
   updateQty: (lineId: number, qty: number) => Promise<void>;
   removeLine: (lineId: number) => Promise<void>;
+  refresh: () => Promise<void>;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -153,6 +154,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const refresh: CartContextValue['refresh'] = useCallback(async () => {
+    const fresh = await getCart().catch(() => null);
+    if (fresh) setCart(fresh);
+  }, []);
+
   const value = useMemo<CartContextValue>(
     () => ({
       cart,
@@ -164,8 +170,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addLine,
       updateQty,
       removeLine,
+      refresh,
     }),
-    [cart, isLoaded, isDrawerOpen, openDrawer, closeDrawer, flyDot, addLine, updateQty, removeLine],
+    [
+      cart,
+      isLoaded,
+      isDrawerOpen,
+      openDrawer,
+      closeDrawer,
+      flyDot,
+      addLine,
+      updateQty,
+      removeLine,
+      refresh,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
