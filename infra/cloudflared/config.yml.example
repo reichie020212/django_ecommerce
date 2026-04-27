@@ -1,0 +1,13 @@
+# Cloudflare Tunnel — config.yml
+# Copy to config.yml and replace the tunnel UUID + hostname.
+# Run with: cloudflared tunnel --config infra/cloudflared/config.yml run
+
+tunnel: REPLACE-WITH-TUNNEL-UUID
+credentials-file: /Users/<you>/.cloudflared/REPLACE-WITH-TUNNEL-UUID.json
+
+ingress:
+  - hostname: lumen.example
+    service: https://lumen.local
+    originRequest:
+      noTLSVerify: true   # Caddy serves the LAN cert; CF Tunnel re-wraps with public cert
+  - service: http_status:404

@@ -216,3 +216,39 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ── Node / Next.js / pnpm ─────────────────────────────────────
+node_modules/
+.next/
+out/
+.pnpm-store/
+*.tsbuildinfo
+next-env.d.ts.bak
+
+# ── Build artifacts / collected statics ───────────────────────
+backend/static_collected/
+backend/media/
+
+# ── OS / editor cruft ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ── Infra secrets ─────────────────────────────────────────────
+infra/secrets/
+*.pem
+*.key
+*.crt
+.cloudflared/
+
+# ── Backups (local copies) ────────────────────────────────────
+*.sql.gz
+.restic-cache/
+
+# ── Playwright artifacts ──────────────────────────────────────
+playwright-report/
+test-results/
+
+# ── Lockfiles policy ──────────────────────────────────────────
+# pnpm-lock.yaml IS committed; it pins arm64 deps for reproducibility.
