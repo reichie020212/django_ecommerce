@@ -3,6 +3,7 @@
 End-to-end Stripe paths are exercised manually with real test keys; here we
 cover the cart/coupon/validation logic and the configuration error path.
 """
+
 from __future__ import annotations
 
 from io import StringIO
@@ -63,15 +64,11 @@ def _full_shipping(**override) -> dict:
 
 
 def test_payment_intent_returns_503_when_stripe_unconfigured(cart_with_overcoat) -> None:
-    res = cart_with_overcoat.post(
-        "/api/checkout/payment-intent/", _full_shipping(), format="json"
-    )
+    res = cart_with_overcoat.post("/api/checkout/payment-intent/", _full_shipping(), format="json")
     assert res.status_code == 503
     assert "STRIPE_SECRET_KEY" in res.json()["detail"]
 
 
 def test_confirm_unknown_payment_intent(api, seeded) -> None:
-    res = api.post(
-        "/api/checkout/confirm/", {"payment_intent_id": "pi_missing"}, format="json"
-    )
+    res = api.post("/api/checkout/confirm/", {"payment_intent_id": "pi_missing"}, format="json")
     assert res.status_code == 404

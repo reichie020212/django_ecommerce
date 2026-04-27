@@ -15,7 +15,8 @@ from django.http import HttpRequest, HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from rest_framework.permissions import AllowAny
+from rest_framework import generics
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -93,6 +94,7 @@ class PaymentIntentView(APIView):
 
         with transaction.atomic():
             order = Order.objects.create(
+                user=request.user if request.user.is_authenticated else None,
                 customer_email=d["email"],
                 customer_phone=d.get("phone", ""),
                 ship_first_name=d["first_name"],
@@ -219,3 +221,23 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse:
         Order.objects.filter(stripe_payment_intent_id=pi_id).update(stripe_status="failed")
 
     return HttpResponse(status=200)
+
+
+# ── Order history (auth required) ────────────────────────────────────────────
+
+
+class OrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user).prefetch_related("lines")
+
+
+class OrderDetailView(generics.RetrieveAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "pk"
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user).prefetch_related("lines")

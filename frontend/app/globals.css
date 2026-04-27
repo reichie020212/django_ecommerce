@@ -5,6 +5,7 @@
    `components` + `utilities` stay so we can drop in ad-hoc helpers. */
 @import '../styles/tokens.css';
 @import '../styles/components.css';
+@import '../styles/auth.css';
 
 @tailwind components;
 @tailwind utilities;

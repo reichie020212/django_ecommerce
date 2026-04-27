@@ -4,6 +4,7 @@ a separate Address model when accounts ship in task #11.
 
 from __future__ import annotations
 
+from django.conf import settings
 from django.db import models
 
 from catalog.models import Variant
@@ -25,6 +26,14 @@ class Order(models.Model):
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="orders",
+        null=True,
+        blank=True,
+        help_text="Set when the order is placed by an authenticated user.",
+    )
     customer_email = models.EmailField()
     customer_phone = models.CharField(max_length=40, blank=True, default="")
 
