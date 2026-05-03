@@ -1,16 +1,14 @@
 """Top-level URL configuration."""
+
 from django.contrib import admin
-from django.http import JsonResponse
 from django.urls import include, path
 
-
-def healthz(_request):
-    return JsonResponse({"status": "ok"})
-
+from lumen.health import healthz, readyz
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/healthz", healthz, name="healthz"),
+    path("api/readyz", readyz, name="readyz"),
     path("api/", include("catalog.urls")),
     path("api/", include("cart.urls")),
     path("api/", include("orders.urls")),
