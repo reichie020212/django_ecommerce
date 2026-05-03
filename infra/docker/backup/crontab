@@ -1,0 +1,3 @@
+# Nightly Postgres dump → S3 at 03:15 (container TZ, default UTC).
+# /proc/1/fd/{1,2} forwards output to docker logs since crond is PID 1.
+15 3 * * * /usr/local/bin/backup.sh > /proc/1/fd/1 2>/proc/1/fd/2
