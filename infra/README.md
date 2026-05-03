@@ -1,6 +1,8 @@
 # Lumen Goods — Mac mini M4 Pro headless deploy runbook
 
 > Step-by-step guide for a fresh Mac mini M4 Pro running macOS, headless, accessed only via SSH. Every step is reproducible from this document.
+>
+> Cloud alternative (Hetzner Cloud CAX21 / ARM64): see [`HETZNER.md`](HETZNER.md). Both runbooks share `.env.example`, `docker-compose.yml`, and `docker-compose.prod.yml`; the cloud path swaps `MEDIA_BACKEND=s3`, replaces the launchd plists with the containerised backup sidecar (`--profile backup`), and uses either Cloudflare Tunnel (same as the Mac mini) or a Hetzner LB / direct A record for ingress.
 
 ## 0. Hardware / OS assumptions
 

@@ -140,7 +140,10 @@ Runs `ruff` + `ruff-format` on the backend, `prettier` on the frontend, plus the
 
 ## Production deploy
 
-The Mac mini M4 Pro headless deploy is documented step-by-step in [`infra/README.md`](infra/README.md) — twelve sections covering bootstrap (Homebrew + OrbStack + cloudflared + restic), secrets, prod stack-up (`docker-compose.prod.yml` overlay with gunicorn + `pnpm start`), Caddy LAN/public host blocks, Cloudflare Tunnel setup, launchd vs. Compose-only supervision, nightly Postgres + restic backups with schedules, resource budget, common ops, and health checks.
+Two supported targets:
+
+- **Mac mini M4 Pro (self-hosted, ARM64)** — [`infra/README.md`](infra/README.md). Twelve sections covering bootstrap (Homebrew + OrbStack + cloudflared + restic), secrets, prod stack-up (`docker-compose.prod.yml` overlay with gunicorn + `pnpm start`), Caddy LAN/public host blocks, Cloudflare Tunnel setup, launchd vs. Compose-only supervision, nightly Postgres + restic backups with schedules, resource budget, common ops, and health checks.
+- **Hetzner Cloud CAX21 (ARM64 VM)** — [`infra/HETZNER.md`](infra/HETZNER.md). Cloudflare R2 for media + backups (S3-compatible, $0 egress), Cloudflare Tunnel or Hetzner LB for ingress, the containerised backup sidecar instead of launchd, systemd unit for boot supervision. Built from the same compose files; only `.env` differs (`MEDIA_BACKEND=s3` + R2 creds + `--profile backup`).
 
 Short version:
 
@@ -163,4 +166,5 @@ docker compose exec api python manage.py createsuperuser
 - [`docs/design-system.md`](docs/design-system.md) — color/type/radius/easing tokens, component port checklist, stylesheet split, font loading.
 - [`docs/stripe.md`](docs/stripe.md) — Stripe env, API surface, webhook signature verification, dev tip for `stripe listen`, customer-portal path.
 - [`infra/README.md`](infra/README.md) — Mac mini M4 Pro headless deploy runbook.
+- [`infra/HETZNER.md`](infra/HETZNER.md) — Hetzner Cloud (ARM64 VM) deploy runbook with Cloudflare R2 + Tunnel.
 - [`CLAUDE_CODE_HANDOFF.md`](CLAUDE_CODE_HANDOFF.md) — the original brief / spec.
