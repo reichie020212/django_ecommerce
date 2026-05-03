@@ -32,9 +32,12 @@ dev = [
 ]
 
 # Setuptools auto-discovery refuses to guess between multiple top-level
-# packages in a flat layout. Spell them out explicitly.
-[tool.setuptools]
-packages = ["lumen", "catalog", "cart", "orders", "accounts", "promotions", "content"]
+# packages in a flat layout. Use find_packages with an explicit include
+# pattern instead — tolerates a Dockerfile that installs deps before
+# copying the source tree (cf. backend/Dockerfile).
+[tool.setuptools.packages.find]
+include = ["lumen*", "catalog*", "cart*", "orders*", "accounts*", "promotions*", "content*"]
+namespaces = false
 
 [tool.ruff]
 line-length = 100
