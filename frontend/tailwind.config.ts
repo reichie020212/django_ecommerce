@@ -3,11 +3,7 @@ import type { Config } from 'tailwindcss';
 // Tailwind reads CSS variable tokens defined in styles/tokens.css.
 // Real token values are ported from prototype/styles.css in task #6.
 const config: Config = {
-  content: [
-    './app/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './lib/**/*.{ts,tsx}',
-  ],
+  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}', './lib/**/*.{ts,tsx}'],
   theme: {
     extend: {
       fontFamily: {
