@@ -1,4 +1,5 @@
 """Celery app for Lumen Goods."""
+
 import os
 
 from celery import Celery
