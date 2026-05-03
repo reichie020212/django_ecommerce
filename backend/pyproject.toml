@@ -31,6 +31,11 @@ dev = [
     "factory-boy>=3.3",
 ]
 
+# Setuptools auto-discovery refuses to guess between multiple top-level
+# packages in a flat layout. Spell them out explicitly.
+[tool.setuptools]
+packages = ["lumen", "catalog", "cart", "orders", "accounts", "promotions", "content"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
