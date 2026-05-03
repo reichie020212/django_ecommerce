@@ -38,3 +38,19 @@ services:
     volumes:
       - ./infra/cloudflared/config.yml:/etc/cloudflared/config.yml:ro
       - ./infra/secrets/cloudflared.json:/etc/cloudflared/credentials.json:ro
+
+  # Cloud-portable Postgres backup sidecar — replaces the macOS launchd
+  # plists for non-Mac deployments. Enable with: --profile backup.
+  # Retention is delegated to the destination bucket's lifecycle rule.
+  backup:
+    profiles: ["backup"]
+    build:
+      context: ./infra/docker/backup
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TZ: ${BACKUP_TZ:-UTC}

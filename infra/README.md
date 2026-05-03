@@ -155,6 +155,35 @@ Restore from a Postgres dump:
 infra/scripts/restore.sh /Volumes/LumenBackup/pg/lumen-2026-04-27-030000.sql.gz
 ```
 
+### 7a. Cloud backup sidecar (non-Mac deployments)
+
+For cloud / Linux VM hosts the launchd plists are unusable. Use the
+containerized sidecar instead:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+    --profile backup up -d --build backup
+```
+
+The sidecar (`infra/docker/backup/`) is an Alpine image with
+`postgresql16-client` + `aws-cli` + busybox `crond`. At 03:15 in the
+container's timezone (default UTC) it pipes `pg_dump` through `gzip`
+into `s3://$BACKUP_S3_BUCKET/$BACKUP_S3_PREFIX/`. The destination is
+S3-compatible — AWS S3, Cloudflare R2, and MinIO all work; pick the
+provider via `AWS_S3_ENDPOINT_URL` (see `.env.example`).
+
+Retention is delegated to a **bucket lifecycle rule** on the
+destination — set it to expire objects after the desired number of
+days (R2: *Settings → Lifecycle Rules*; AWS S3: *Management →
+Lifecycle*). Don't try to do retention in the script.
+
+Restore from a cloud backup:
+
+```bash
+aws s3 ls s3://$BACKUP_S3_BUCKET/$BACKUP_S3_PREFIX
+infra/scripts/restore-from-s3.sh pg/lumen-20260503T031500Z.sql.gz
+```
+
 ## 8. Resource budget (tuned for a 24 GB Mac mini M4 Pro)
 
 | Service | Limit |
