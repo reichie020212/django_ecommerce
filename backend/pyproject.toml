@@ -17,6 +17,7 @@ dependencies = [
     "argon2-cffi>=23.1",
     "gunicorn>=22.0",
     "pillow>=10.3",
+    "django-storages[s3]>=1.14",
 ]
 
 [project.optional-dependencies]

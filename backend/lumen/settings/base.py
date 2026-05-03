@@ -1,4 +1,5 @@
 """Shared Django settings for Lumen Goods."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -90,6 +91,37 @@ STATIC_URL = "static/"
 STATIC_ROOT = env("STATIC_ROOT", default=str(BASE_DIR / "static_collected"))
 MEDIA_URL = "media/"
 MEDIA_ROOT = env("MEDIA_ROOT", default=str(BASE_DIR / "media"))
+
+# ── Media storage backend ──────────────────────────────────
+# MEDIA_BACKEND=local (default) writes to MEDIA_ROOT on disk.
+# MEDIA_BACKEND=s3 writes via django-storages to any S3-compatible
+# service (AWS S3, Cloudflare R2, Backblaze B2, MinIO).
+MEDIA_BACKEND = env("MEDIA_BACKEND", default="local")
+
+if MEDIA_BACKEND == "s3":
+    AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL", default=None) or None
+    AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="auto")
+    AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN", default=None) or None
+    AWS_S3_ADDRESSING_STYLE = env("AWS_S3_ADDRESSING_STYLE", default="virtual")
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = env.bool("AWS_QUERYSTRING_AUTH", default=False)
+
+STORAGES = {
+    "default": {
+        "BACKEND": (
+            "lumen.storage_backends.MediaStorage"
+            if MEDIA_BACKEND == "s3"
+            else "django.core.files.storage.FileSystemStorage"
+        ),
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
