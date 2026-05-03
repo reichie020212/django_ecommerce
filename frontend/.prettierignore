@@ -4,6 +4,7 @@ node_modules/
 out/
 dist/
 coverage/
+pnpm-lock.yaml
 
 # Design-token files are verbatim ports from prototype/styles.css per
 # CLAUDE.md §5 — Prettier must not paraphrase them.
