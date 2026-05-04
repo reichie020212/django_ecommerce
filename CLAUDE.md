@@ -15,10 +15,13 @@
   - Frontend: Next.js (App Router, React 18+, TypeScript), Tailwind CSS
   - Payments: Stripe (real Payment Intents — `<PaymentElement />`)
   - Auth: DRF SimpleJWT on the API; Next.js middleware for session handling
-  - Storage: local filesystem first; S3-compatible adapter ready for later
+  - Storage: local filesystem first; S3-compatible adapter (`MEDIA_BACKEND=s3`) ready for cloud
   - Search: Postgres full-text (path to Meilisearch if needed)
+- **Production targets** (both ARM64, both run the same compose files):
+  - **Mac mini M4 Pro** (self-hosted, headless) — see `infra/README.md`.
+  - **Hetzner Cloud CAX21** (ARM64 VM) — see `infra/HETZNER.md`. The cloud-portable path; substitute any other arm64 cloud VM and the runbook applies unchanged.
 
-The full handoff brief is `CLAUDE_CODE_HANDOFF.md` — that document is the spec; this one is the operating manual.
+The full handoff brief is `CLAUDE_CODE_HANDOFF.md` — that document is the spec; this one is the operating manual. A consolidated setup guide that ties the two production runbooks together with a decision tree and an env-var diff table is `docs/SETUP.md`.
 
 ---
 
@@ -190,19 +193,33 @@ If a change blows a budget, the change blocks until the budget is fixed or expli
 
 ---
 
-## 9. Self-hosting context — Mac mini M4 Pro (headless)
+## 9. Self-hosting context — Mac mini M4 Pro and Hetzner Cloud (both ARM64, both headless)
 
-This stack runs on a single **Mac mini M4 Pro** (Apple Silicon, arm64, macOS, headless, SSH-only). Plan accordingly.
+This stack runs on a single ARM64 host: either a **Mac mini M4 Pro** (Apple Silicon, macOS, SSH-only) or a **Hetzner Cloud CAX21** (Ampere, Ubuntu 24.04). Both targets use the same `docker-compose.yml` + `docker-compose.prod.yml`; only `.env`, ingress, and supervision differ. Plan accordingly.
+
+Shared rules:
 
 - **arm64 only.** Every container, every binary must be arm64-native. No x86 emulation. Pin arm64-compatible bases: `postgres:16`, `redis:7`, `python:3.12-slim`, `node:20-alpine`.
-- **No GPU dependencies.** No CUDA. Apple Silicon CPU only.
-- **Container runtime**: Docker Desktop or OrbStack on macOS.
-- **Process supervision**: Docker Compose with `restart: unless-stopped` is the recommended path; a `launchd` plist is also provided as an alternative.
-- **Reverse proxy + TLS**: Caddy (preferred, automatic Let's Encrypt) in front of the stack. `Caddyfile` covers both `lumen.local` (LAN) and a public domain.
-- **Public exposure**: Cloudflare Tunnel — never open router ports. Config in `infra/cloudflared/`.
-- **Resource budget**: Postgres `shared_buffers` constrained, **2** Celery workers, **1** Next.js Node process. Document assumed limits in `infra/README.md`.
-- **Backups**: nightly `pg_dump` (03:15) + `restic` snapshot of the media volume (03:35) to an external volume. launchd plist templates ship in `infra/launchd/com.lumengoods.{pg,media}-backup.plist.example`.
+- **No GPU dependencies.** No CUDA.
+- **Reverse proxy + TLS**: Caddy in front of the stack. `Caddyfile` covers both `lumen.local` (LAN) and a public domain.
+- **Public exposure**: Cloudflare Tunnel — never open router ports. Config in `infra/cloudflared/`. The Hetzner path also supports a Hetzner LB / direct A record + Caddy + Let's Encrypt as an alternative.
+- **Resource budget**: Postgres `shared_buffers` constrained, **2** Celery workers, **1** Next.js Node process, **3** gunicorn workers on the API. Documented per-target in `infra/README.md` §10 and `infra/HETZNER.md` §12.
 - **Headless workflow**: every common op (deploy, seed, restore) has a CLI script in `infra/scripts/`. No GUI assumptions.
+
+Mac mini specifics:
+
+- **Container runtime**: OrbStack (recommended) or Docker Desktop on macOS.
+- **Process supervision**: Docker Compose with `restart: unless-stopped`; a `launchd` plist is provided as an alternative.
+- **Backups**: nightly `pg_dump` (03:15) + `restic` snapshot of the media volume (03:35) to an external SSD. launchd plist templates in `infra/launchd/com.lumengoods.{pg,media}-backup.plist.example`.
+- **Storage**: `MEDIA_BACKEND=local` (filesystem). Switch to `s3` if you want R2-fronted media on the Mac mini too.
+
+Hetzner Cloud specifics:
+
+- **Container runtime**: stock Docker Engine + Compose v2 from the official ARM64 apt repo.
+- **Process supervision**: Compose `restart: unless-stopped` plus a systemd unit (`lumen.service`) for boot survival. Template in `infra/HETZNER.md` §9.
+- **Backups**: containerised `pg_dump` cron sidecar behind `--profile backup`, uploads to a Cloudflare R2 bucket (`lumen-backups`). No host-side cron. Retention is delegated to the bucket lifecycle rule.
+- **Storage**: `MEDIA_BACKEND=s3` with Cloudflare R2 (`lumen-media`). $0 egress. Self-hosted MinIO is the documented alternative.
+- **Images**: pull from `ghcr.io/reichie020212/django_ecommerce-{api,web}` (multi-arch, built by CI on every push to `main`) or build locally on the VM. Both packages default to **private** — flip to public on github.com → *Packages*, or `docker login ghcr.io` on the VM with a read-only PAT.
 
 ---
 
@@ -233,7 +250,9 @@ This project follows the global Division of Labor: **Gemini is the architect, Cl
 
 - **Spec / brief**: `CLAUDE_CODE_HANDOFF.md`
 - **Local-dev quickstart**: `README.md`
+- **Setup guide (local + production, with decision tree + env-diff table)**: `docs/SETUP.md`
 - **Mac mini deploy runbook**: `infra/README.md`
+- **Hetzner Cloud (ARM64 VM) deploy runbook**: `infra/HETZNER.md`
 - **Design source-of-truth**: `prototype/` (do not edit; it's frozen)
 - **Ported tokens**: `frontend/styles/tokens.css` + `frontend/styles/components.css`
 - **Architecture**: `docs/architecture.md` (system diagram + full API surface + data flows)
@@ -241,3 +260,35 @@ This project follows the global Division of Labor: **Gemini is the architect, Cl
 - **Stripe integration notes**: `docs/stripe.md`
 
 `GEMINI.md` is generated from this file via `scripts/sync-agent-docs.sh`. Edit `CLAUDE.md` and run the script — never edit `GEMINI.md` by hand.
+
+---
+
+## 13. Current state (snapshot for the next session)
+
+This section is the fastest way for a fresh session to catch up. Update it when state changes.
+
+**Cloud-readiness Blueprint shipped on `main` (2026-05-03)** — a five-PR sequence plus follow-up CI fixes plus a Hetzner runbook. Net effect: the same compose files now deploy unchanged to Hetzner Cloud (or any ARM64 cloud VM); only `.env` differs. Highlights:
+
+- `feat/healthz` — `/api/healthz` (process up) and `/api/readyz` (DB + Redis check). Load balancer / Cloudflare Tunnel health checks should target `readyz`, not `healthz`.
+- `feat/s3-media` — `MEDIA_BACKEND=local|s3` switch via django-storages. Works against AWS S3, Cloudflare R2, Backblaze B2, and self-hosted MinIO.
+- `feat/json-logging` — `JSON_LOGGING=1` + `LOG_LEVEL` knobs; `DATABASE_URL` is the source of truth (django-environ).
+- `feat/ci-multiarch` — GitHub Actions builds and pushes multi-arch (`linux/amd64,linux/arm64`) `api` and `web` images to `ghcr.io/reichie020212/django_ecommerce-{api,web}`. Both packages default to **private**.
+- `feat/backup-sidecar` — Alpine `pg_dump` → S3 cron container behind `--profile backup`. Verified end-to-end against MinIO. Retention is delegated to the bucket lifecycle rule (the script does **not** prune).
+- `feat/hetzner-runbook` — `infra/HETZNER.md`, 14 sections.
+
+**Not yet done:** the actual cloud deploy. Walking `infra/HETZNER.md` requires Red to provision a Hetzner CAX21 + create the two Cloudflare R2 buckets (`lumen-media`, `lumen-backups`) + an R2 API token. CI is green, GHCR images are publishing. Next-session pickup options live in the auto-memory file `project_open_tasks.md`; default if Red doesn't pick is "actually deploy to Hetzner" since the Blueprint just landed.
+
+**Loose ends not yet fixed:**
+
+- Local GPG signing config in this repo fights itself (`gpg.format=ssh` but `gpg.program=gpg`). Commits succeed but are unsigned-but-Signed-off-by. Fix with `git config gpg.program ssh-keygen` (or `git config --unset gpg.program`). Don't touch git config without asking — global rule.
+- GHCR packages are private; flip on github.com → *Packages* if you want unauthenticated pulls from the VM.
+- No frontend `pnpm-lock.yaml` committed — CI uses `pnpm install --no-frozen-lockfile`. Frontend installs aren't fully reproducible; not urgent.
+- GitHub Actions runners will force Node 24 in June 2026 and remove Node 20 in September 2026. Bump action versions before then.
+
+**Working pattern (treat as default):**
+
+1. Each feature lands on a dedicated worktree branch (`git worktree add ../lumen-<task> -b <task-branch>`).
+2. Each PR is small enough to be a single commit + tests/format checks pass before merge.
+3. Merge order: Red says "merge", Claude does `git merge --no-ff` into the integration branch, removes the worktree, deletes the branch.
+4. Push to origin/main is gated — Red has been approving each push individually.
+5. All five Blueprint PRs followed this pattern.
